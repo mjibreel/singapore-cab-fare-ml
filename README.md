@@ -93,3 +93,4 @@ Average: $40.29 SGD
 ```
 
 That's it! Simple and straightforward, perfect for a school project report.
+# singapore-taxi-fare-prediction
