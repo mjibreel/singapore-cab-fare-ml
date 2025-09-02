@@ -42,11 +42,7 @@ streamlit run streamlit_app.py
 2. Run the Streamlit app: `streamlit run streamlit_app.py`
 3. Open your web browser to the displayed URL
 
-### 🪟 **Windows Users**
-For detailed Windows setup instructions, see [WINDOWS_SETUP.md](WINDOWS_SETUP.md)
 
-### 📚 **References and Citations**
-For proper academic citations and sources, see [REFERENCES.md](REFERENCES.md)
 
 ## Two Pricing Models
 
