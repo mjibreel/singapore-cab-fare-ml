@@ -8,7 +8,10 @@ Watch the application in action:
 
 https://github.com/mazen2211/singapore-taxi-fare-prediction/assets/your-username/home%20page.mp4
 
-*Note: Click the link above to view the demo video*
+<video width="100%" controls>
+  <source src="https://github.com/mazen2211/singapore-taxi-fare-prediction/assets/your-username/home%20page.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ## Quick Start
 
