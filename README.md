@@ -2,8 +2,19 @@
 
 A simple Python application to predict taxi fares in Singapore.
 
+## 🎥 Demo
 
+Watch the application in action:
+
+https://github.com/mazen2211/singapore-taxi-fare-prediction/assets/your-username/home%20page.mp4
+
+*Note: Click the link above to view the demo video*
+
+## Quick Start
+
+```bash
 streamlit run streamlit_app.py
+```
 
 
 
