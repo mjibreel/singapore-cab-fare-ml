@@ -107,9 +107,9 @@ That's it! Simple and straightforward, perfect for a school project report.
 
 | No. | Full Name                  | Student ID     | Class Section | Programme | NRIC/Passport |
 |-----|-----------------------------|----------------|---------------|-----------|---------------|
-| 1   | Ghallab Mazen Sadeq Tawfik | 202409010715   | [Thursday]     | BIT       | [Insert NRIC/Passport] |
-| 2   | MD Arman Gani Refat        | 202409010459   | [Thursday]     | BCSSE     | [Insert NRIC/Passport] |
-| 3   | Amjad Khondoker Wasif      | 202409010759   | [Thursday]     | BCSSE     | [Insert NRIC/Passport] |
+| 1   | Ghallab Mazen Sadeq Tawfik | 202409010715   | [Thursday]     | BIT       | [13504476] |
+| 2   | MD Arman Gani Refat        | 202409010459   | [Thursday]     | BCSSE     | [A03691443] |
+| 3   | Amjad Khondoker Wasif      | 202409010759   | [Thursday]     | BCSSE     | [A12463439] |
 ---
 
 📌 **Course**: BIT4333 Introduction to Machine Learning  
