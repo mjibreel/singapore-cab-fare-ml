@@ -109,3 +109,15 @@ Average: $40.29 SGD
 
 That's it! Simple and straightforward, perfect for a school project report.
 # singapore-taxi-fare-prediction
+---
+
+## 👥 Group Members  
+
+| No. | Full Name                  | Student ID     | Programme |
+|-----|-----------------------------|----------------|-----------|
+| 1   | Ghallab Mazen Sadeq Tawfik | 202409010715   | BIT       |
+| 2   | MD Arman Gani Refat        | 202409010459   | BCSSE     |
+| 3   | Amjad Khondoker Wasif      | 202409010759   | BCSSE     |
+
+📌 **Course**: BIT4333 Introduction to Machine Learning  
+📌 **Lecturer**: Sir Nazmirul Izzad Bin Nassir
