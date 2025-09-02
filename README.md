@@ -121,3 +121,6 @@ That's it! Simple and straightforward, perfect for a school project report.
 
 📌 **Course**: BIT4333 Introduction to Machine Learning  
 📌 **Lecturer**: Sir Nazmirul Izzad Bin Nassir
+
+<!-- CONTRIBUTORS:START - Do not remove or modify this section -->
+<!-- CONTRIBUTORS:END -->
