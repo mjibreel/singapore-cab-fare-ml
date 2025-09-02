@@ -22,7 +22,6 @@ streamlit run streamlit_app.py
 
 
 
-
 ## What it does
 - Calculates taxi fare based on distance and time using **TWO DIFFERENT PRICING MODELS**
 - Uses simple formulas (no complex ML)
