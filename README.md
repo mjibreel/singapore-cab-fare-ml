@@ -106,6 +106,9 @@ Model 1 (Standard): $38.36 SGD
 Model 2 (Premium): $42.22 SGD
 Average: $40.29 SGD
 ```
+google colab
+https://colab.research.google.com/drive/1VfD0HH5oF2qpYxyPkzjQzoshiT9fZBPN?usp=sharing
+
 
 That's it! Simple and straightforward, perfect for a school project report.
 # singapore-taxi-fare-prediction
