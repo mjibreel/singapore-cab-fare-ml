@@ -121,6 +121,255 @@ def predict_fare_ml(models, distance_km, duration_minutes, passengers=1,
         'Average': round((rf_pred + xgb_pred) / 2, 2)
     }
 
+def create_visual_elements(basic_fare, alt_fare, avg_fare, distance, duration, 
+                          peak, weekend, hour, passenger_count, models):
+    """Create visual elements and charts for the app."""
+    
+    # 1. Fare Comparison Chart
+    st.markdown("### 💰 Fare Comparison")
+    
+    if models['loaded']:
+        model_names = ['Random Forest', 'XGBoost', 'Average']
+        fare_values = [basic_fare, alt_fare, avg_fare]
+        colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
+    else:
+        model_names = ['Model 1 (Standard)', 'Model 2 (Premium)', 'Average']
+        fare_values = [basic_fare, alt_fare, avg_fare]
+        colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
+    
+    # Create bar chart
+    fig_bar = go.Figure(data=[
+        go.Bar(
+            x=model_names,
+            y=fare_values,
+            marker_color=colors,
+            text=[f"${fare:.2f}" for fare in fare_values],
+            textposition='auto',
+        )
+    ])
+    
+    fig_bar.update_layout(
+        title="Fare Predictions Comparison",
+        xaxis_title="Models",
+        yaxis_title="Fare (SGD)",
+        height=400,
+        showlegend=False,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white')
+    )
+    
+    st.plotly_chart(fig_bar, use_container_width=True)
+    
+    # 2. Fare Breakdown Pie Chart
+    st.markdown("### 🥧 Fare Breakdown")
+    
+    # Calculate fare components
+    base_fare = 3.20
+    distance_cost = 1.50 * distance
+    time_cost = 0.40 * duration
+    surcharge = avg_fare - (base_fare + distance_cost + time_cost)
+    
+    components = ['Base Fare', 'Distance Cost', 'Time Cost', 'Surcharges']
+    values = [base_fare, distance_cost, time_cost, max(0, surcharge)]
+    colors_pie = ['#FF9999', '#66B2FF', '#99FF99', '#FFCC99']
+    
+    fig_pie = go.Figure(data=[go.Pie(
+        labels=components,
+        values=values,
+        marker_colors=colors_pie,
+        textinfo='label+percent+value',
+        texttemplate='%{label}<br>%{value:.2f} SGD<br>(%{percent})'
+    )])
+    
+    fig_pie.update_layout(
+        title="Fare Components Breakdown",
+        height=400,
+        font=dict(color='white'),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(fig_pie, use_container_width=True)
+    
+    # 3. Time-based Analysis
+    with col2:
+        st.markdown("### ⏰ Time Analysis")
+        
+        # Create hourly fare simulation
+        hours = list(range(24))
+        hourly_fares = []
+        
+        for h in hours:
+            is_peak = is_peak_hour(h)
+            is_weekend_day = is_weekend(5)  # Saturday for weekend analysis
+            
+            if models['loaded']:
+                # Use ML prediction for each hour
+                temp_predictions = predict_fare_ml(
+                    models, distance, duration, passenger_count,
+                    h, 5, 9, is_peak, is_weekend_day
+                )
+                hourly_fares.append(temp_predictions['Average'])
+            else:
+                # Use formula for each hour
+                temp_fare = calculate_fare(distance, duration, is_peak, is_weekend_day)
+                hourly_fares.append(temp_fare)
+        
+        # Create line chart
+        fig_line = go.Figure()
+        
+        fig_line.add_trace(go.Scatter(
+            x=hours,
+            y=hourly_fares,
+            mode='lines+markers',
+            name='Fare by Hour',
+            line=dict(color='#4ECDC4', width=3),
+            marker=dict(size=6)
+        ))
+        
+        # Highlight current hour
+        fig_line.add_vline(
+            x=hour, 
+            line_dash="dash", 
+            line_color="red",
+            annotation_text=f"Current: {hour}:00"
+        )
+        
+        fig_line.update_layout(
+            title="Fare Variation by Hour",
+            xaxis_title="Hour of Day",
+            yaxis_title="Fare (SGD)",
+            height=300,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white')
+        )
+        
+        st.plotly_chart(fig_line, use_container_width=True)
+    
+    # 4. Distance vs Fare Scatter Plot
+    st.markdown("### 📏 Distance vs Fare Analysis")
+    
+    # Generate sample data for visualization
+    sample_distances = np.linspace(1, 30, 20)
+    sample_fares = []
+    
+    for dist in sample_distances:
+        sample_duration = estimate_duration(dist)
+        if models['loaded']:
+            sample_predictions = predict_fare_ml(
+                models, dist, sample_duration, passenger_count,
+                hour, 0, 9, peak, weekend
+            )
+            sample_fares.append(sample_predictions['Average'])
+        else:
+            sample_fare = calculate_fare(dist, sample_duration, peak, weekend)
+            sample_fares.append(sample_fare)
+    
+    # Create scatter plot
+    fig_scatter = go.Figure()
+    
+    fig_scatter.add_trace(go.Scatter(
+        x=sample_distances,
+        y=sample_fares,
+        mode='markers+lines',
+        name='Fare Trend',
+        marker=dict(
+            size=8,
+            color=sample_fares,
+            colorscale='Viridis',
+            showscale=True,
+            colorbar=dict(title="Fare (SGD)")
+        ),
+        line=dict(color='#FF6B6B', width=2)
+    ))
+    
+    # Highlight current trip
+    fig_scatter.add_trace(go.Scatter(
+        x=[distance],
+        y=[avg_fare],
+        mode='markers',
+        name='Your Trip',
+        marker=dict(
+            size=15,
+            color='red',
+            symbol='star'
+        )
+    ))
+    
+    fig_scatter.update_layout(
+        title="Distance vs Fare Relationship",
+        xaxis_title="Distance (km)",
+        yaxis_title="Fare (SGD)",
+        height=400,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white')
+    )
+    
+    st.plotly_chart(fig_scatter, use_container_width=True)
+    
+    # 5. Peak Hours Visualization
+    st.markdown("### 🚦 Peak Hours Impact")
+    
+    # Create peak hours comparison
+    peak_fares = []
+    normal_fares = []
+    time_labels = ['6 AM', '8 AM', '10 AM', '12 PM', '2 PM', '4 PM', '6 PM', '8 PM', '10 PM']
+    time_hours = [6, 8, 10, 12, 14, 16, 18, 20, 22]
+    
+    for h in time_hours:
+        is_peak_time = is_peak_hour(h)
+        if models['loaded']:
+            temp_predictions = predict_fare_ml(
+                models, distance, duration, passenger_count,
+                h, 0, 9, is_peak_time, weekend
+            )
+            fare = temp_predictions['Average']
+        else:
+            fare = calculate_fare(distance, duration, is_peak_time, weekend)
+        
+        if is_peak_time:
+            peak_fares.append(fare)
+            normal_fares.append(None)
+        else:
+            peak_fares.append(None)
+            normal_fares.append(fare)
+    
+    fig_peak = go.Figure()
+    
+    fig_peak.add_trace(go.Bar(
+        x=time_labels,
+        y=peak_fares,
+        name='Peak Hours',
+        marker_color='#FF6B6B',
+        opacity=0.8
+    ))
+    
+    fig_peak.add_trace(go.Bar(
+        x=time_labels,
+        y=normal_fares,
+        name='Normal Hours',
+        marker_color='#4ECDC4',
+        opacity=0.8
+    ))
+    
+    fig_peak.update_layout(
+        title="Peak vs Normal Hours Fare Comparison",
+        xaxis_title="Time of Day",
+        yaxis_title="Fare (SGD)",
+        height=400,
+        barmode='group',
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white')
+    )
+    
+    st.plotly_chart(fig_peak, use_container_width=True)
+
 def main():
     """Main Streamlit application function."""
     
@@ -309,6 +558,14 @@ def main():
                 st.metric("Average Prediction", f"${avg_fare:.2f} SGD")
         
         st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Visual Elements Section
+        st.markdown("---")
+        st.markdown("## 📊 Visual Analysis")
+        
+        # Create charts
+        create_visual_elements(basic_fare, alt_fare, avg_fare, distance, duration, 
+                              peak, weekend, hour, passenger_count, models)
         
         # Trip details
         st.markdown("## 📍 Trip Details")
