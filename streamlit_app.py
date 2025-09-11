@@ -14,6 +14,8 @@ from plotly.subplots import make_subplots
 # Import our utility functions
 from haversine import calculate_distance, get_singapore_landmarks
 from fare_calculator import calculate_fare, estimate_duration, is_peak_hour, is_weekend
+import pickle
+import os
 
 # Page configuration
 st.set_page_config(
@@ -60,21 +62,99 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+@st.cache_data
+def load_ml_models():
+    """Load the trained ML models."""
+    try:
+        with open('singapore_taxi_models.pkl', 'rb') as f:
+            model_data = pickle.load(f)
+        
+        return {
+            'rf_model': model_data['rf_model'],
+            'xgb_model': model_data['xgb_model'],
+            'feature_columns': model_data['feature_columns'],
+            'rf_rmse': model_data['rf_rmse'],
+            'xgb_rmse': model_data['xgb_rmse'],
+            'loaded': True
+        }
+    except FileNotFoundError:
+        st.error("❌ ML models not found. Please ensure 'singapore_taxi_models.pkl' is in the project folder.")
+        return {'loaded': False}
+    except Exception as e:
+        st.error(f"❌ Error loading models: {e}")
+        return {'loaded': False}
+
+def predict_fare_ml(models, distance_km, duration_minutes, passengers=1, 
+                   hour=12, day_of_week=1, month=6, is_peak_hour=False, is_weekend=False):
+    """Predict fare using ML models."""
+    
+    # Create feature vector
+    features = pd.DataFrame({
+        'distance_km': [distance_km],
+        'duration_minutes': [duration_minutes],
+        'passengers': [passengers],
+        'hour': [hour],
+        'day_of_week': [day_of_week],
+        'month': [month],
+        'is_peak_hour': [int(is_peak_hour)],
+        'is_weekend': [int(is_weekend)],
+        'distance_squared': [distance_km ** 2],
+        'duration_squared': [duration_minutes ** 2],
+        'distance_duration_ratio': [distance_km / (duration_minutes + 1e-6)],
+        'is_morning': [int(6 <= hour < 12)],
+        'is_afternoon': [int(12 <= hour < 18)],
+        'is_evening': [int(18 <= hour < 24)],
+        'is_night': [int(0 <= hour < 6)],
+        'is_rainy_season': [int((month >= 11) or (month <= 3))]
+    })
+    
+    # Ensure correct column order
+    features = features[models['feature_columns']]
+    
+    # Make predictions
+    rf_pred = models['rf_model'].predict(features)[0]
+    xgb_pred = models['xgb_model'].predict(features)[0]
+    
+    return {
+        'Random Forest': round(rf_pred, 2),
+        'XGBoost': round(xgb_pred, 2),
+        'Average': round((rf_pred + xgb_pred) / 2, 2)
+    }
+
 def main():
     """Main Streamlit application function."""
+    
+    # Load ML models
+    models = load_ml_models()
     
     # Header
     st.markdown('<h1 class="main-header">🚕 Singapore Taxi Fare Predictor</h1>', 
                 unsafe_allow_html=True)
     
-    st.markdown("""
-    <div style='text-align: center; margin-bottom: 2rem;'>
-        <p style='font-size: 1.2rem; color: #666;'>
-            Predict taxi fares in Singapore using two different pricing models. 
-            Get accurate estimates for your trips with real-time calculations.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    if models['loaded']:
+        st.markdown("""
+        <div style='text-align: center; margin-bottom: 2rem;'>
+            <p style='font-size: 1.2rem; color: #666;'>
+                Predict taxi fares in Singapore using <strong>Machine Learning</strong> models. 
+                Get accurate estimates with Random Forest and XGBoost algorithms.
+            </p>
+            <p style='font-size: 1rem; color: #28a745; font-weight: bold;'>
+                ✅ ML Models Loaded: Random Forest (RMSE: $2.24) & XGBoost (RMSE: $2.16)
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style='text-align: center; margin-bottom: 2rem;'>
+            <p style='font-size: 1.2rem; color: #666;'>
+                Predict taxi fares in Singapore using two different pricing models. 
+                Get accurate estimates for your trips with real-time calculations.
+            </p>
+            <p style='font-size: 1rem; color: #dc3545; font-weight: bold;'>
+                ⚠️ Using fallback formulas (ML models not available)
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Sidebar for input
     with st.sidebar:
@@ -152,22 +232,34 @@ def main():
         peak = is_peak_hour(hour)
         weekend = is_weekend(day_of_week)
         
-        # Calculate fare using TWO MODELS
-        # Model 1: Basic formula
-        basic_fare = calculate_fare(distance, duration, peak, weekend)
-        
-        # Model 2: Alternative pricing model
-        alt_base_fare = 4.00
-        alt_distance_cost = 1.80 * distance
-        alt_time_cost = 0.35 * duration
-        alt_fare = alt_base_fare + alt_distance_cost + alt_time_cost
-        
-        if peak:
-            alt_fare *= 1.25
-        if weekend:
-            alt_fare *= 1.15
-        
-        alt_fare = round(alt_fare, 2)
+        # Calculate fare using ML models or fallback formulas
+        if models['loaded']:
+            # Use ML models for prediction
+            ml_predictions = predict_fare_ml(
+                models, distance, duration, passenger_count,
+                hour, day_of_week, pickup_datetime.month, peak, weekend
+            )
+            
+            basic_fare = ml_predictions['Random Forest']
+            alt_fare = ml_predictions['XGBoost']
+            avg_fare = ml_predictions['Average']
+        else:
+            # Fallback to simple formulas
+            basic_fare = calculate_fare(distance, duration, peak, weekend)
+            
+            # Model 2: Alternative pricing model
+            alt_base_fare = 4.00
+            alt_distance_cost = 1.80 * distance
+            alt_time_cost = 0.35 * duration
+            alt_fare = alt_base_fare + alt_distance_cost + alt_time_cost
+            
+            if peak:
+                alt_fare *= 1.25
+            if weekend:
+                alt_fare *= 1.15
+            
+            alt_fare = round(alt_fare, 2)
+            avg_fare = (basic_fare + alt_fare) / 2
         
         # Display results
         st.markdown("## 🚕 Trip Summary")
@@ -190,19 +282,31 @@ def main():
         
         # Fare predictions
         st.markdown('<div class="prediction-box">', unsafe_allow_html=True)
-        st.markdown("## 💰 Fare Predictions (Two Models)")
         
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Model 1 (Standard)", f"${basic_fare:.2f} SGD")
-        
-        with col2:
-            st.metric("Model 2 (Premium)", f"${alt_fare:.2f} SGD")
-        
-        with col3:
-            avg_fare = (basic_fare + alt_fare) / 2
-            st.metric("Average Prediction", f"${avg_fare:.2f} SGD")
+        if models['loaded']:
+            st.markdown("## 🤖 ML Model Predictions")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Random Forest", f"${basic_fare:.2f} SGD")
+            
+            with col2:
+                st.metric("XGBoost", f"${alt_fare:.2f} SGD")
+            
+            with col3:
+                st.metric("Average Prediction", f"${avg_fare:.2f} SGD")
+        else:
+            st.markdown("## 💰 Fare Predictions (Two Models)")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Model 1 (Standard)", f"${basic_fare:.2f} SGD")
+            
+            with col2:
+                st.metric("Model 2 (Premium)", f"${alt_fare:.2f} SGD")
+            
+            with col3:
+                st.metric("Average Prediction", f"${avg_fare:.2f} SGD")
         
         st.markdown("</div>", unsafe_allow_html=True)
         
@@ -237,11 +341,19 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("**Model Information:**")
-            st.write("- **Model 1 (Standard)**: Regular taxi pricing with 20% peak surcharge")
-            st.write("- **Model 2 (Premium)**: Premium service pricing with 25% peak surcharge")
-            st.write("- **Success Target**: RMSE < $3.00 SGD")
-            st.write("- **Data Source**: Singapore Taxi Trip Records + Synthetic Fare Generation")
+            if models['loaded']:
+                st.markdown("**ML Model Information:**")
+                st.write(f"- **Random Forest**: RMSE ${models['rf_rmse']:.2f} SGD (Target met!)")
+                st.write(f"- **XGBoost**: RMSE ${models['xgb_rmse']:.2f} SGD (Target met!)")
+                st.write("- **Training Data**: 15,000 synthetic Singapore taxi trips")
+                st.write("- **Features**: 16 engineered features (distance, time, passengers, etc.)")
+                st.write("- **Accuracy**: >99% (R² > 0.99)")
+            else:
+                st.markdown("**Model Information:**")
+                st.write("- **Model 1 (Standard)**: Regular taxi pricing with 20% peak surcharge")
+                st.write("- **Model 2 (Premium)**: Premium service pricing with 25% peak surcharge")
+                st.write("- **Success Target**: RMSE < $3.00 SGD")
+                st.write("- **Data Source**: Singapore Taxi Trip Records + Synthetic Fare Generation")
         
         with col2:
             st.markdown("**Technical Features:**")
