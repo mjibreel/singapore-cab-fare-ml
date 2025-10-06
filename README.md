@@ -1,14 +1,8 @@
 # Singapore Taxi Fare Prediction
 
-A simple Python application to predict taxi fares in Singapore.
+A simple ML Python application to predict taxi fares in Singapore.
 
-## 👥 Team Members
 
-| No. | Name | Student ID | Programme |
-|-----|------|------------|-----------|
-| 1 | Ghallab Mazen Sadeq Tawfik | 202409010715 | BIT |
-| 2 | MD ARMAN GANI REFAT | 202409010459 | BCSSE |
-| 3 | AMJAD KHONDOKER WASIF | 202409010759 | BCSSE |
 
 ## 🎥 Demo
 
