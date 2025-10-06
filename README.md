@@ -106,24 +106,15 @@ Model 1 (Standard): $38.36 SGD
 Model 2 (Premium): $42.22 SGD
 Average: $40.29 SGD
 ```
-google colab
-https://colab.research.google.com/drive/1VfD0HH5oF2qpYxyPkzjQzoshiT9fZBPN?usp=sharing
+## Google Colab
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1VfD0HH5oF2qpYxyPkzjQzoshiT9fZBPN?usp=sharing)
 
-That's it! Simple and straightforward, perfect for a school project report.
-# singapore-taxi-fare-prediction
----
-
-## 👥 Group Members  
-
-| No. | Full Name                  | Student ID     | Programme |
-|-----|-----------------------------|----------------|-----------|
-| 1   | Ghallab Mazen Sadeq Tawfik | 202409010715   | BIT       |
-| 2   | MD Arman Gani Refat        | 202409010459   | BCSSE     |
-| 3   | Amjad Khondoker Wasif      | 202409010759   | BCSSE     |
+## Course Information
 
 📌 **Course**: BIT4333 Introduction to Machine Learning  
 📌 **Lecturer**: Sir Nazmirul Izzad Bin Nassir
 
-<!-- CONTRIBUTORS:START - Do not remove or modify this section -->
-<!-- CONTRIBUTORS:END -->
+---
+
+That's it! Simple and straightforward, perfect for a school project report.
